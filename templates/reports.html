@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Summary Report - Employee Attendance & Salary System{% endblock %}
+
+{% block content %}
+<!-- Page Header with Print & PDF Download -->
+<div class="page-header">
+  <div class="page-title">
+    <h2>Payroll & Attendance Summary Report</h2>
+    <p>Comprehensive executive auditing, department metrics, and financial liabilities statement.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="window.print()" id="printReportBtn">
+      <i class="fas fa-print"></i> Print Report
+    </button>
+    <a href="{{ url_for('download_summary_pdf') }}" class="btn btn-primary" id="downloadPdfReportBtn" target="_blank">
+      <i class="fas fa-file-pdf"></i> Download Official PDF
+    </a>
+  </div>
+</div>
+
+<div id="reportDetailsContainer">
+  <!-- Key Metrics 8-Card Grid -->
+  <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+    <!-- Total Employees -->
+    <div class="card kpi-card">
+      <div class="kpi-info">
+        <h3>Total Employees</h3>
+        <div class="kpi-value" id="repTotalWorkforce">--</div>
+        <div class="kpi-subtext">Active Workforce</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-users"></i></div>
+    </div>
+
+    <!-- Average Attendance -->
+    <div class="card kpi-card kpi-attendance">
+      <div class="kpi-info">
+        <h3>Average Attendance</h3>
+        <div class="kpi-value" id="repAvgAttendance">--%</div>
+        <div class="kpi-subtext">Overall Rate</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-chart-line"></i></div>
+    </div>
+
+    <!-- Highest Attendance -->
+    <div class="card kpi-card">
+      <div class="kpi-info">
+        <h3>Highest Attendance</h3>
+        <div class="kpi-value" id="repHighestAttendance" style="font-size:16px;color:var(--success);padding-top:4px;">--</div>
+        <div class="kpi-subtext">Top Performer</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-medal"></i></div>
+    </div>
+
+    <!-- Lowest Attendance -->
+    <div class="card kpi-card kpi-threshold">
+      <div class="kpi-info">
+        <h3>Lowest Attendance</h3>
+        <div class="kpi-value" id="repLowestAttendance" style="font-size:16px;color:var(--danger);padding-top:4px;">--</div>
+        <div class="kpi-subtext">Deficient Alert</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-exclamation"></i></div>
+    </div>
+
+    <!-- Total OT Hours -->
+    <div class="card kpi-card kpi-ot">
+      <div class="kpi-info">
+        <h3>Total Overtime Hours</h3>
+        <div class="kpi-value" id="repTotalOTHours">-- hrs</div>
+        <div class="kpi-subtext">Extra Logged Hours</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-clock"></i></div>
+    </div>
+
+    <!-- Total OT Pay -->
+    <div class="card kpi-card kpi-ot">
+      <div class="kpi-info">
+        <h3>Total Overtime Pay</h3>
+        <div class="kpi-value" id="repTotalOTPay">₹--</div>
+        <div class="kpi-subtext">Variable Compensation</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-coins"></i></div>
+    </div>
+
+    <!-- Total Basic Expense -->
+    <div class="card kpi-card kpi-salary">
+      <div class="kpi-info">
+        <h3>Basic Salary Expense</h3>
+        <div class="kpi-value" id="repTotalBasic">₹--</div>
+        <div class="kpi-subtext">Fixed Payroll</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-building"></i></div>
+    </div>
+
+    <!-- Total Final Salary Expense -->
+    <div class="card kpi-card kpi-salary">
+      <div class="kpi-info">
+        <h3>Total Salary Expense</h3>
+        <div class="kpi-value" id="repTotalSalary">₹--</div>
+        <div class="kpi-subtext">Gross Total Disbursed</div>
+      </div>
+      <div class="kpi-icon-box"><i class="fas fa-money-bill-wave"></i></div>
+    </div>
+  </div>
+
+  <!-- Department-wise Statistics Table -->
+  <div class="card" style="margin-top:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+      <h3 style="font-size:16px;font-weight:700;">
+        <i class="fas fa-sitemap" style="color:var(--accent);margin-right:8px;"></i> Department-wise Workforce & Financial Statement
+      </h3>
+      <span class="badge badge-dept">Comprehensive Breakdown</span>
+    </div>
+
+    <div class="table-responsive" style="border:none;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Department</th>
+            <th style="text-align:center;">Employee Count</th>
+            <th style="text-align:center;">Avg Attendance</th>
+            <th>Total Basic Pay</th>
+            <th>Total OT Pay</th>
+            <th>Total Final Salary</th>
+          </tr>
+        </thead>
+        <tbody id="reportDeptTableBody">
+          <tr>
+            <td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">
+              <i class="fas fa-spinner fa-spin"></i> Generating department analytics...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Corporate Certification Box -->
+  <div class="card" style="margin-top:24px;background-color:var(--bg-subtle);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+      <div>
+        <h4 style="font-size:14px;font-weight:700;color:var(--text-main);">Enterprise HR & Payroll Certification</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+          This statement reflects reconciled attendance and compensation records. All overtime and adjustments are calculated in accordance with corporate policy.
+        </p>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <a href="{{ url_for('download_summary_pdf') }}" class="btn btn-primary" target="_blank">
+          <i class="fas fa-file-pdf"></i> Download Signed PDF Report
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

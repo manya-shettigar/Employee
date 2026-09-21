@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Management - Attendance & Salary System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-title">
+    <h2>Employee Directory & Payroll Management</h2>
+    <p>View, search, edit, and disburse compensation for all company personnel.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="openAddEmployeeModal()" id="addNewEmployeeBtn">
+      <i class="fas fa-plus"></i> Add Employee
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('csvUploadModal')">
+      <i class="fas fa-file-upload"></i> Import CSV
+    </button>
+    <a href="{{ url_for('download_processed_csv') }}" class="btn btn-secondary">
+      <i class="fas fa-file-excel"></i> Export Processed CSV
+    </a>
+  </div>
+</div>
+
+<!-- Table Toolbar: Search, Filters, Sorting -->
+<div class="card" style="margin-bottom:20px;padding:16px;">
+  <div class="table-toolbar">
+    <!-- Left: Search Box -->
+    <div class="search-box">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="tableSearchInput" placeholder="Search by name or Employee ID (e.g. EMP045)..." aria-label="Search employees">
+    </div>
+
+    <!-- Right: Filter & Sort Controls -->
+    <div class="table-filters">
+      <!-- Department Filter -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label for="tableDeptFilter" style="font-size:12px;font-weight:600;color:var(--text-muted);">Dept:</label>
+        <select id="tableDeptFilter" class="form-select">
+          <option value="all">All Departments</option>
+          <option value="IT">IT</option>
+          <option value="HR">HR</option>
+          <option value="Finance">Finance</option>
+          <option value="Sales">Sales</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Operations">Operations</option>
+          <option value="Support">Support</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label for="tableStatusFilter" style="font-size:12px;font-weight:600;color:var(--text-muted);">Status:</label>
+        <select id="tableStatusFilter" class="form-select">
+          <option value="all">All Attendance</option>
+          <option value="Excellent">Excellent (≥90%)</option>
+          <option value="Good">Good (75–89%)</option>
+          <option value="Below Threshold">Below Threshold (&lt;75%)</option>
+        </select>
+      </div>
+
+      <!-- Sort By -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label for="tableSortSelect" style="font-size:12px;font-weight:600;color:var(--text-muted);">Sort By:</label>
+        <select id="tableSortSelect" class="form-select">
+          <option value="id-asc">ID (Low to High)</option>
+          <option value="id-desc">ID (High to Low)</option>
+          <option value="final_salary-desc">Salary (Highest First)</option>
+          <option value="final_salary-asc">Salary (Lowest First)</option>
+          <option value="attendance_percentage-desc">Attendance (Highest First)</option>
+          <option value="attendance_percentage-asc">Attendance (Lowest First)</option>
+          <option value="employee_name-asc">Name (A-Z)</option>
+        </select>
+      </div>
+
+      <button type="button" class="btn btn-secondary btn-sm" onclick="resetFilters()" title="Reset All Filters">
+        <i class="fas fa-redo-alt"></i> Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Employees Table Container -->
+<div class="table-responsive">
+  <table class="data-table" id="mainEmployeeTable">
+    <thead>
+      <tr>
+        <th>Emp ID</th>
+        <th>Employee Name</th>
+        <th>Department</th>
+        <th style="text-align:center;">Working Days</th>
+        <th style="text-align:center;">Days Present</th>
+        <th>Attendance %</th>
+        <th>Basic Salary</th>
+        <th style="text-align:center;">OT Hours</th>
+        <th>OT Pay</th>
+        <th>Final Salary</th>
+        <th>Status</th>
+        <th style="text-align:center;">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="employeeTableBody">
+      <!-- Populated dynamically via script.js -->
+      <tr>
+        <td colspan="12" style="text-align:center;padding:30px;color:var(--text-muted);">
+          <i class="fas fa-spinner fa-spin"></i> Loading employee records...
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination Controls -->
+<div class="pagination-wrapper">
+  <div class="pagination-info" id="tableShowingCount">Showing 0–0 of 0 employees</div>
+  <div class="pagination-controls" id="paginationControls">
+    <!-- Populated dynamically -->
+  </div>
+</div>
+
+<script>
+  function resetFilters() {
+    document.getElementById('tableSearchInput').value = '';
+    document.getElementById('tableDeptFilter').value = 'all';
+    document.getElementById('tableStatusFilter').value = 'all';
+    document.getElementById('tableSortSelect').value = 'id-asc';
+    currentSearchTerm = '';
+    currentDeptFilter = 'all';
+    currentStatusFilter = 'all';
+    currentSortBy = 'id';
+    currentSortOrder = 'asc';
+    currentEmployeesPage = 1;
+    loadEmployeesTable();
+  }
+</script>
+{% endblock %}

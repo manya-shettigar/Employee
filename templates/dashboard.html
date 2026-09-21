@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Employee Attendance & Salary Processing System{% endblock %}
+
+{% block content %}
+<!-- Page Header with Quick Actions -->
+<div class="page-header">
+  <div class="page-title">
+    <h2>Payroll & Attendance Executive Dashboard</h2>
+    <p>Real-time analytics, attendance compliance monitoring, and workforce financial overview.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="openAddEmployeeModal()" id="quickAddEmployeeBtn">
+      <i class="fas fa-user-plus"></i> Add Employee
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('csvUploadModal')" id="quickUploadCsvBtn">
+      <i class="fas fa-file-upload"></i> Upload CSV
+    </button>
+    <a href="{{ url_for('download_processed_csv') }}" class="btn btn-secondary" id="quickDownloadCsvBtn">
+      <i class="fas fa-file-download"></i> Download CSV
+    </a>
+    <a href="{{ url_for('reports_page') }}" class="btn btn-secondary" id="quickReportBtn">
+      <i class="fas fa-chart-line"></i> Summary Report
+    </a>
+  </div>
+</div>
+
+<!-- KPI Cards Grid -->
+<div class="kpi-grid">
+  <!-- Card 1: Total Employees -->
+  <div class="card kpi-card">
+    <div class="kpi-info">
+      <h3>Total Workforce</h3>
+      <div class="kpi-value" id="kpiTotalEmployees">--</div>
+      <div class="kpi-subtext">
+        <i class="fas fa-users" style="color:var(--accent);"></i> Active Employees
+      </div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-id-badge"></i>
+    </div>
+  </div>
+
+  <!-- Card 2: Average Attendance -->
+  <div class="card kpi-card kpi-attendance">
+    <div class="kpi-info">
+      <h3>Average Attendance</h3>
+      <div class="kpi-value" id="kpiAvgAttendance">--%</div>
+      <div class="kpi-subtext">
+        <i class="fas fa-calendar-check" style="color:var(--success);"></i> Current Cycle Benchmark
+      </div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-user-check"></i>
+    </div>
+  </div>
+
+  <!-- Card 3: Below Attendance Threshold -->
+  <div class="card kpi-card kpi-threshold">
+    <div class="kpi-info">
+      <h3>Below Threshold (&lt;75%)</h3>
+      <div class="kpi-value" id="kpiBelowThreshold" style="color:var(--danger);">--</div>
+      <div class="kpi-subtext">
+        <a href="{{ url_for('threshold_page') }}" style="color:var(--danger);font-weight:600;display:flex;align-items:center;gap:4px;">
+          View At-Risk List <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+  </div>
+
+  <!-- Card 4: Total Salary Expense -->
+  <div class="card kpi-card kpi-salary">
+    <div class="kpi-info">
+      <h3>Monthly Salary Expense</h3>
+      <div class="kpi-value" id="kpiTotalSalary">₹--</div>
+      <div class="kpi-subtext">
+        <i class="fas fa-wallet" style="color:#8B5CF6;"></i> Total Disbursed Gross
+      </div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-money-check-alt"></i>
+    </div>
+  </div>
+
+  <!-- Card 5: Total Overtime Pay -->
+  <div class="card kpi-card kpi-ot">
+    <div class="kpi-info">
+      <h3>Total Overtime Pay</h3>
+      <div class="kpi-value" id="kpiTotalOT">₹--</div>
+      <div class="kpi-subtext" id="kpiOTHoursSub">
+        Across active OT hours
+      </div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-business-time"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section Row 1 (Top: Dept Distribution + Attendance Comparison) -->
+<div class="charts-grid-top">
+  <!-- Chart 1: Department Distribution -->
+  <div class="card chart-card">
+    <div class="chart-header">
+      <h3>1. Department Distribution</h3>
+      <span class="chart-badge">Workforce Share</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="deptDistChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: Attendance Comparison by Department -->
+  <div class="card chart-card">
+    <div class="chart-header">
+      <h3>2. Attendance Comparison by Department</h3>
+      <span class="chart-badge">Benchmark 75% Target</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="attendanceCompChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section Row 2 (Bottom: Salary Comparison + Status Doughnut + Monthly Expense) -->
+<div class="charts-grid-bottom">
+  <!-- Chart 3: Salary Comparison -->
+  <div class="card chart-card">
+    <div class="chart-header">
+      <h3>3. Average Salary by Department</h3>
+      <span class="chart-badge">Compensation Trend</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="salaryCompChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 4: Attendance Status Breakdown -->
+  <div class="card chart-card">
+    <div class="chart-header">
+      <h3>4. Attendance Status Distribution</h3>
+      <span class="chart-badge">Excellent vs Good vs Low</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="attendanceStatusChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 5: Monthly Salary & OT Expense -->
+  <div class="card chart-card">
+    <div class="chart-header">
+      <h3>5. Department Payroll Breakdown</h3>
+      <span class="chart-badge">Basic vs Overtime Pay</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="monthlyExpenseChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Critical Attendance Alerts Feed -->
+<div class="card" style="margin-top:24px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+    <div>
+      <h3 style="font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-bell" style="color:var(--danger);"></i> Attendance Deficiency & Compliance Alerts
+      </h3>
+      <p style="font-size:12.5px;color:var(--text-muted);margin-top:2px;">Employees with lowest recorded attendance for immediate HR intervention.</p>
+    </div>
+    <a href="{{ url_for('threshold_page') }}" class="btn btn-sm btn-outline-primary">
+      Review All Below Threshold <i class="fas fa-chevron-right"></i>
+    </a>
+  </div>
+  <div id="dashboardAlertList">
+    <div style="padding:20px;text-align:center;color:var(--text-muted);">Loading alert records...</div>
+  </div>
+</div>
+{% endblock %}

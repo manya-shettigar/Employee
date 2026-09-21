@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Employee Attendance & Salary Processing System{% endblock %}</title>
+  <meta name="description" content="Professional Enterprise HR Management, Employee Attendance Tracking and Automated Payroll System.">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- Core Design Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('dashboard') }}" class="brand-wrapper" id="brandLogoLink">
+        <div class="brand-icon">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="brand-text">
+          <h1>EMS Payroll</h1>
+          <span>Attendance & Salary System</span>
+        </div>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+            <a href="{{ url_for('dashboard') }}" id="navDashboardLink">
+              <i class="fas fa-th-large"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item {% if request.path == '/employees' %}active{% endif %}">
+            <a href="{{ url_for('employees_page') }}" id="navEmployeesLink">
+              <i class="fas fa-users"></i> Employees
+            </a>
+          </li>
+          <li class="nav-item {% if request.path == '/threshold' %}active{% endif %}">
+            <a href="{{ url_for('threshold_page') }}" id="navThresholdLink">
+              <i class="fas fa-user-clock"></i> Attendance Threshold
+            </a>
+          </li>
+          <li class="nav-item {% if request.path == '/reports' %}active{% endif %}">
+            <a href="{{ url_for('reports_page') }}" id="navReportsLink">
+              <i class="fas fa-file-invoice"></i> Reports
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Live Clock -->
+        <div class="live-clock-pill" title="Live System Time">
+          <div class="live-dot"></div>
+          <span id="liveClockText">--:--:--</span>
+        </div>
+
+        <!-- Dark Mode Toggle -->
+        <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+          <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- User Info & Logout -->
+        <div class="user-profile-badge">
+          <div class="user-avatar" title="Administrator">AD</div>
+          <span class="user-name">Admin</span>
+          <a href="{{ url_for('logout') }}" class="logout-btn" title="Sign Out" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Global Loading Overlay -->
+  <div class="loading-spinner-overlay" id="globalSpinner">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==================== GLOBAL MODALS ==================== -->
+
+  <!-- Add/Edit Employee Modal -->
+  <div class="modal-backdrop" id="employeeFormModal" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="employeeModalTitle">Add New Employee</h3>
+        <button class="modal-close-btn" onclick="closeModal('employeeFormModal')" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="employeeForm">
+        <div class="modal-body">
+          <input type="hidden" id="formDbId" value="">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="formEmpId">Employee ID *</label>
+              <input type="text" id="formEmpId" class="form-input" placeholder="e.g. EMP501" required>
+              <span class="form-help">Unique corporate identifier</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formName">Full Name *</label>
+              <input type="text" id="formName" class="form-input" placeholder="e.g. Ananya Sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formDept">Department *</label>
+              <select id="formDept" class="form-select form-input" required>
+                <option value="IT">IT</option>
+                <option value="HR">HR</option>
+                <option value="Finance">Finance</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Operations">Operations</option>
+                <option value="Support">Support</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formWorkingDays">Total Working Days *</label>
+              <input type="number" id="formWorkingDays" class="form-input" min="1" max="31" value="26" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formDaysPresent">Days Present *</label>
+              <input type="number" id="formDaysPresent" class="form-input" min="0" max="31" value="24" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formSalary">Basic Salary (₹) *</label>
+              <input type="number" id="formSalary" class="form-input" min="0" step="100" value="45000" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formOtHours">Overtime Hours</label>
+              <input type="number" id="formOtHours" class="form-input" min="0" max="100" step="0.5" value="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="formOtRate">Overtime Rate/Hour (₹)</label>
+              <input type="number" id="formOtRate" class="form-input" min="0" step="10" value="250">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('employeeFormModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveEmployeeSubmitBtn">
+            <i class="fas fa-save"></i> Save Employee
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Employee Profile Modal with SVG Gauge -->
+  <div class="modal-backdrop" id="profileModal" role="dialog" aria-modal="true">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h3>Employee Comprehensive Profile</h3>
+        <button class="modal-close-btn" onclick="closeModal('profileModal')" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="profile-card-header">
+          <div class="profile-large-avatar" id="profileModalAvatar">EM</div>
+          <div class="profile-title-block">
+            <h3 id="profileModalName">Employee Name</h3>
+            <div class="profile-meta-badges">
+              <span class="badge badge-dept" id="profileModalDept">Department</span>
+              <span class="badge" id="profileModalId">EMP000</span>
+              <span class="badge" id="profileModalStatus">Status</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gauge Section -->
+        <div class="gauge-section">
+          <div class="circular-gauge-container">
+            <svg class="gauge-svg" width="120" height="120">
+              <circle class="gauge-bg-circle" cx="60" cy="60" r="45" stroke-width="10" fill="none" />
+              <circle id="profileGaugeCircle" class="gauge-val-circle" cx="60" cy="60" r="45" stroke-width="10" fill="none" />
+            </svg>
+            <div class="gauge-center-text">
+              <div class="gauge-center-val" id="profileGaugeVal">0%</div>
+              <div class="gauge-center-lbl">Attendance</div>
+            </div>
+          </div>
+          <div class="gauge-stats">
+            <div class="gauge-stat-item">
+              <i class="fas fa-calendar-check" style="color:var(--success);"></i>
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);">Days Present</div>
+                <div style="font-weight:700;font-size:14px;" id="profileDaysPresent">0 Days</div>
+              </div>
+            </div>
+            <div class="gauge-stat-item">
+              <i class="fas fa-calendar-alt" style="color:var(--accent);"></i>
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);">Total Working Days</div>
+                <div style="font-weight:700;font-size:14px;" id="profileTotalDays">0 Days</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Breakdown -->
+        <div class="profile-financials-grid">
+          <div class="financial-tile">
+            <h4>Basic Salary</h4>
+            <p id="profileBasicSalary">₹0</p>
+          </div>
+          <div class="financial-tile">
+            <h4>Overtime Pay</h4>
+            <p id="profileOTPay" style="color:var(--warning);">₹0</p>
+            <span style="font-size:11px;color:var(--text-muted);" id="profileOTDetails">0 hrs @ ₹0/hr</span>
+          </div>
+          <div class="financial-tile">
+            <h4>Final Net Salary</h4>
+            <p id="profileFinalSalary" style="color:var(--success);">₹0</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('profileModal')">Close</button>
+        <button type="button" class="btn btn-secondary" id="profileEditBtn">
+          <i class="fas fa-edit"></i> Edit Details
+        </button>
+        <button type="button" class="btn btn-primary" id="profileSalarySlipBtn">
+          <i class="fas fa-file-invoice-dollar"></i> Generate Salary Slip
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Salary Slip Modal -->
+  <div class="modal-backdrop" id="salarySlipModal" role="dialog" aria-modal="true">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h3>Employee Salary Slip Preview</h3>
+        <button class="modal-close-btn" onclick="closeModal('salarySlipModal')" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="printableSalarySlipArea">
+        <div style="text-align:center;border-bottom:2px solid var(--border);padding-bottom:14px;margin-bottom:16px;">
+          <h2 style="font-size:20px;color:var(--primary);font-weight:800;">ENTERPRISE GLOBAL SOLUTIONS PVT. LTD.</h2>
+          <p style="font-size:12px;color:var(--text-muted);">Corporate Tower 4, Cyber City, Gurugram, Haryana - 122002</p>
+          <div style="margin-top:8px;display:inline-block;padding:4px 12px;background:var(--primary-light);border-radius:var(--radius-full);font-size:12px;font-weight:700;color:var(--primary);">
+            MONTHLY SALARY DISBURSEMENT VOUCHER
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;background:var(--bg-subtle);padding:14px;border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;">
+          <div><strong>Employee Name:</strong> <span id="slipEmpName">--</span></div>
+          <div><strong>Employee ID:</strong> <span id="slipEmpId">--</span></div>
+          <div><strong>Department:</strong> <span id="slipDept">--</span></div>
+          <div><strong>Attendance Record:</strong> <span id="slipAttRate">--</span></div>
+        </div>
+
+        <table class="data-table" style="margin-bottom:16px;">
+          <thead>
+            <tr>
+              <th>Earnings Description</th>
+              <th>Amount (₹)</th>
+              <th>Deductions</th>
+              <th>Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Basic Salary</td>
+              <td id="slipBasic">₹0.00</td>
+              <td>Provident Fund (PF)</td>
+              <td>₹0.00</td>
+            </tr>
+            <tr>
+              <td>Overtime Pay <span id="slipOTDetails" style="font-size:11px;color:var(--text-muted);"></span></td>
+              <td id="slipOT">₹0.00</td>
+              <td>Professional Tax (PT)</td>
+              <td>₹0.00</td>
+            </tr>
+            <tr>
+              <td>House Rent Allowance (HRA)</td>
+              <td>Included</td>
+              <td>TDS / Tax Deductions</td>
+              <td>₹0.00</td>
+            </tr>
+            <tr style="font-weight:700;background:var(--bg-subtle);">
+              <td>Total Gross Earnings</td>
+              <td id="slipGross">₹0.00</td>
+              <td>Total Deductions</td>
+              <td>₹0.00</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="background:var(--success-bg);border:1px solid var(--success-border);padding:14px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-weight:700;font-size:15px;color:var(--success-text);">NET TAKE-HOME DISBURSED:</span>
+          <span style="font-weight:800;font-size:22px;color:var(--success);" id="slipNetPay">₹0.00</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="window.print()">
+          <i class="fas fa-print"></i> Print Slip
+        </button>
+        <a id="slipDownloadPdfBtn" href="#" class="btn btn-primary" target="_blank">
+          <i class="fas fa-file-pdf"></i> Download Official PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV Upload Modal -->
+  <div class="modal-backdrop" id="csvUploadModal" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Upload Employees CSV</h3>
+        <button class="modal-close-btn" onclick="closeModal('csvUploadModal')" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="csvUploadForm">
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+            Upload a CSV file containing employee records. Required headers:
+            <code>employee_id, employee_name, department, total_working_days, days_present, basic_salary, overtime_hours, overtime_rate</code>
+          </p>
+          
+          <div class="drop-zone" id="csvDropZone">
+            <i class="fas fa-cloud-upload-alt drop-zone-icon"></i>
+            <div style="font-weight:600;font-size:14px;">Drag & Drop your CSV file here</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">or click to browse from computer</div>
+            <div id="csvSelectedFileName" style="margin-top:10px;font-weight:600;color:var(--accent);"></div>
+          </div>
+          <input type="file" id="csvFileInput" accept=".csv" style="display:none;">
+
+          <div style="margin-top:16px;text-align:center;">
+            <a href="{{ url_for('download_sample_csv') }}" class="btn btn-sm btn-outline-primary" id="downloadSampleCsvBtn">
+              <i class="fas fa-download"></i> Download Sample CSV Template
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('csvUploadModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitCsvUploadBtn">
+            <i class="fas fa-upload"></i> Process & Import CSV
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

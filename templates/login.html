@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Employee Attendance & Salary Processing System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page-body">
+
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-icon">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <h2>EMS Portal Login</h2>
+      <p>Attendance & Salary Processing System</p>
+    </div>
+
+    {% if error %}
+    <div style="background-color:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger-text);padding:10px 14px;border-radius:var(--radius-md);font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('login') }}" class="login-form">
+      <div class="form-group">
+        <label class="form-label" for="loginUsername">Username</label>
+        <div style="position:relative;">
+          <input type="text" name="username" id="loginUsername" class="form-input" style="width:100%;padding-left:36px;" placeholder="Enter admin username" required autofocus>
+          <i class="fas fa-user" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;"></i>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <div style="position:relative;">
+          <input type="password" name="password" id="loginPassword" class="form-input" style="width:100%;padding-left:36px;" placeholder="••••••••" required>
+          <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;font-size:14.5px;margin-top:6px;" id="loginSubmitBtn">
+        <i class="fas fa-sign-in-alt"></i> Sign In to Dashboard
+      </button>
+
+      <div class="demo-credentials-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <strong style="color:var(--primary);"><i class="fas fa-key"></i> Demo Credentials:</strong>
+          <button type="button" class="btn btn-sm btn-outline-primary" style="padding:2px 8px;font-size:11px;" onclick="fillDemoCredentials()">
+            Quick Fill
+          </button>
+        </div>
+        <div>Username: <code>admin</code> | Password: <code>admin123</code></div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function fillDemoCredentials() {
+      document.getElementById('loginUsername').value = 'admin';
+      document.getElementById('loginPassword').value = 'admin123';
+    }
+  </script>
+</body>
+</html>

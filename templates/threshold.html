@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Threshold Monitor - Employee System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-title">
+    <h2>Attendance Threshold Compliance Monitor</h2>
+    <p>Monitor and manage personnel falling below the corporate attendance standard.</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('download_processed_csv') }}" class="btn btn-secondary">
+      <i class="fas fa-file-download"></i> Export Compliance CSV
+    </a>
+  </div>
+</div>
+
+<!-- Threshold Selector Bar -->
+<div class="card" style="margin-bottom:24px;padding:20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div>
+      <h3 style="font-size:15px;font-weight:700;">Select Policy Attendance Benchmark:</h3>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:2px;">Filter employees who have an attendance percentage below this rate.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-secondary threshold-select-btn" data-val="60" onclick="loadThresholdPage(60)">60% Minimum</button>
+      <button class="btn btn-secondary threshold-select-btn" data-val="70" onclick="loadThresholdPage(70)">70% Benchmark</button>
+      <button class="btn btn-primary threshold-select-btn" data-val="75" onclick="loadThresholdPage(75)">75% Standard</button>
+      <button class="btn btn-secondary threshold-select-btn" data-val="80" onclick="loadThresholdPage(80)">80% High</button>
+      <button class="btn btn-secondary threshold-select-btn" data-val="90" onclick="loadThresholdPage(90)">90% Strict</button>
+    </div>
+  </div>
+</div>
+
+<!-- Threshold KPI Metrics -->
+<div class="kpi-grid">
+  <div class="card kpi-card kpi-threshold">
+    <div class="kpi-info">
+      <h3>Deficient Attendance Count</h3>
+      <div class="kpi-value" id="thresholdCount" style="color:var(--danger);">--</div>
+      <div class="kpi-subtext">Employees under <span id="thresholdBenchmarkVal">75%</span></div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-user-times"></i>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-info">
+      <h3>Workforce Impact Rate</h3>
+      <div class="kpi-value" id="thresholdPct">--%</div>
+      <div class="kpi-subtext">Proportion of total employee roster</div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-percentage"></i>
+    </div>
+  </div>
+
+  <div class="card kpi-card kpi-attendance">
+    <div class="kpi-info">
+      <h3>Policy Status</h3>
+      <div class="kpi-value" style="font-size:18px;color:var(--warning);">Action Required</div>
+      <div class="kpi-subtext">HR counselling recommended</div>
+    </div>
+    <div class="kpi-icon-box">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+  </div>
+</div>
+
+<!-- At-Risk Employees Table -->
+<div class="card" style="padding:0;overflow:hidden;margin-top:20px;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <h3 style="font-size:15px;font-weight:700;color:var(--text-main);">
+      <i class="fas fa-list-ul" style="color:var(--danger);margin-right:6px;"></i> Personnel Falling Below Threshold
+    </h3>
+  </div>
+  <div class="table-responsive" style="border:none;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Emp ID</th>
+          <th>Employee Name</th>
+          <th>Department</th>
+          <th style="text-align:center;">Days Present / Total</th>
+          <th>Attendance Rate</th>
+          <th>Basic Salary</th>
+          <th>Gross Final Salary</th>
+          <th style="text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="thresholdTableBody">
+        <tr>
+          <td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">
+            <i class="fas fa-spinner fa-spin"></i> Loading threshold compliance records...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
